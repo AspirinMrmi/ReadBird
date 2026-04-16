@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "ReadBird",
+  "version": "0.1.0",
+  "description": "Save X posts into a categorized read-later list.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["https://x.com/*", "https://twitter.com/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "ReadBird"
+  },
+  "options_page": "manager.html",
+  "icons": {
+    "16": "icon-16.png",
+    "32": "icon-32.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icon.svg"],
+      "matches": ["https://x.com/*", "https://twitter.com/*"]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://x.com/*", "https://twitter.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
