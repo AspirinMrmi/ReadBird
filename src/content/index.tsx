@@ -250,15 +250,26 @@ async function showOverlay(pendingTweet: PendingTweet): Promise<void> {
 
   const host = document.createElement('div');
   host.id = OVERLAY_ID;
-  host.innerHTML = `
+  host.style.position = 'fixed';
+  host.style.inset = '0';
+  host.style.zIndex = '2147483647';
+
+  const shadowRoot = host.attachShadow({ mode: 'open' });
+  shadowRoot.innerHTML = `
     <style>
-      #${OVERLAY_ID} {
+      :host {
+        all: initial;
+      }
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+      .rb-shell {
         position: fixed;
         inset: 0;
-        z-index: 2147483647;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        color: #e7e9ea;
       }
-      #${OVERLAY_ID} .rb-backdrop {
+      .rb-backdrop {
         position: absolute;
         inset: 0;
         display: flex;
@@ -267,7 +278,7 @@ async function showOverlay(pendingTweet: PendingTweet): Promise<void> {
         padding: 16px;
         background: rgba(0, 0, 0, 0.65);
       }
-      #${OVERLAY_ID} .rb-panel {
+      .rb-panel {
         width: 100%;
         max-width: 420px;
         border-radius: 24px;
@@ -277,148 +288,150 @@ async function showOverlay(pendingTweet: PendingTweet): Promise<void> {
         padding: 20px;
         box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
       }
-      #${OVERLAY_ID} .rb-top {
+      .rb-top {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 16px;
       }
-      #${OVERLAY_ID} .rb-kicker {
+      .rb-kicker {
         margin: 0;
         color: #71767b;
         font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 0.2em;
       }
-      #${OVERLAY_ID} .rb-title {
+      .rb-title {
         margin: 8px 0 0;
         font-size: 20px;
         font-weight: 700;
       }
-      #${OVERLAY_ID} .rb-url {
+      .rb-url {
         margin: 8px 0 0;
         color: #71767b;
         font-size: 14px;
         word-break: break-all;
       }
-      #${OVERLAY_ID} .rb-close,
-      #${OVERLAY_ID} .rb-secondary,
-      #${OVERLAY_ID} .rb-primary {
+      .rb-close,
+      .rb-secondary,
+      .rb-primary {
         border-radius: 999px;
         cursor: pointer;
         font-size: 14px;
       }
-      #${OVERLAY_ID} .rb-close,
-      #${OVERLAY_ID} .rb-secondary {
+      .rb-close,
+      .rb-secondary {
         border: 1px solid #2f3336;
         background: transparent;
         color: #e7e9ea;
         padding: 10px 14px;
       }
-      #${OVERLAY_ID} .rb-primary {
+      .rb-primary {
         border: none;
         background: #1d9bf0;
         color: #000;
         padding: 12px 18px;
         font-weight: 700;
       }
-      #${OVERLAY_ID} .rb-grid {
+      .rb-grid {
         margin-top: 20px;
         display: grid;
         gap: 16px;
       }
-      #${OVERLAY_ID} label {
+      label {
         display: block;
         margin-bottom: 8px;
         color: #71767b;
         font-size: 14px;
       }
-      #${OVERLAY_ID} input,
-      #${OVERLAY_ID} textarea,
-      #${OVERLAY_ID} select {
+      input,
+      textarea,
+      select {
         width: 100%;
         border: 1px solid #2f3336;
         border-radius: 16px;
         background: rgba(0, 0, 0, 0.3);
         color: #e7e9ea;
         padding: 12px 16px;
-        box-sizing: border-box;
         outline: none;
       }
-      #${OVERLAY_ID} textarea {
+      textarea {
         min-height: 112px;
         resize: vertical;
       }
-      #${OVERLAY_ID} .rb-actions {
+      .rb-actions {
         margin-top: 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
       }
-      #${OVERLAY_ID} .rb-status {
+      .rb-status {
         min-height: 20px;
         margin-top: 12px;
         font-size: 14px;
       }
-      #${OVERLAY_ID} .rb-primary[disabled] {
+      .rb-primary[disabled] {
         opacity: 0.65;
         cursor: default;
       }
     </style>
-    <div class="rb-backdrop">
-      <div class="rb-panel" role="dialog" aria-modal="true" aria-label="Save to ReadBird">
-        <div class="rb-top">
-          <div>
-            <p class="rb-kicker">ReadBird</p>
-            <h2 class="rb-title"></h2>
-            <p class="rb-url"></p>
+    <div class="rb-shell">
+      <div class="rb-backdrop">
+        <div class="rb-panel" role="dialog" aria-modal="true" aria-label="Save to ReadBird">
+          <div class="rb-top">
+            <div>
+              <p class="rb-kicker">ReadBird</p>
+              <h2 class="rb-title"></h2>
+              <p class="rb-url"></p>
+            </div>
+            <button class="rb-close" type="button">Close</button>
           </div>
-          <button class="rb-close" type="button">Close</button>
+          <div class="rb-grid">
+            <div>
+              <label for="rb-category-select">Category</label>
+              <select id="rb-category-select">
+                <option value="">Unsorted</option>
+              </select>
+            </div>
+            <div>
+              <label for="rb-new-category">Quick new category</label>
+              <input id="rb-new-category" placeholder="e.g. LLM infra" />
+            </div>
+            <div>
+              <label for="rb-tags">Tags</label>
+              <input id="rb-tags" placeholder="frontend, ai, perf" />
+            </div>
+            <div>
+              <label for="rb-note">Note</label>
+              <textarea id="rb-note" placeholder="What made this worth saving?"></textarea>
+            </div>
+          </div>
+          <div class="rb-actions">
+            <button class="rb-secondary rb-open" type="button">Open library</button>
+            <button class="rb-primary rb-save" type="button">Save to ReadBird</button>
+          </div>
+          <div class="rb-status"></div>
         </div>
-        <div class="rb-grid">
-          <div>
-            <label for="rb-category-select">Category</label>
-            <select id="rb-category-select">
-              <option value="">Unsorted</option>
-            </select>
-          </div>
-          <div>
-            <label for="rb-new-category">Quick new category</label>
-            <input id="rb-new-category" placeholder="e.g. LLM infra" />
-          </div>
-          <div>
-            <label for="rb-tags">Tags</label>
-            <input id="rb-tags" placeholder="frontend, ai, perf" />
-          </div>
-          <div>
-            <label for="rb-note">Note</label>
-            <textarea id="rb-note" placeholder="What made this worth saving?"></textarea>
-          </div>
-        </div>
-        <div class="rb-actions">
-          <button class="rb-secondary rb-open" type="button">Open library</button>
-          <button class="rb-primary rb-save" type="button">Save to ReadBird</button>
-        </div>
-        <div class="rb-status"></div>
       </div>
     </div>
   `;
 
-  document.body.appendChild(host);
+  document.documentElement.appendChild(host);
   document.addEventListener('keydown', handleOverlayEscape, true);
 
-  const titleElement = host.querySelector('.rb-title');
-  const urlElement = host.querySelector('.rb-url');
-  const categorySelect = host.querySelector('#rb-category-select') as HTMLSelectElement | null;
-  const newCategoryInput = host.querySelector('#rb-new-category') as HTMLInputElement | null;
-  const tagsInput = host.querySelector('#rb-tags') as HTMLInputElement | null;
-  const noteInput = host.querySelector('#rb-note') as HTMLTextAreaElement | null;
-  const saveButton = host.querySelector('.rb-save') as HTMLButtonElement | null;
-  const openButton = host.querySelector('.rb-open') as HTMLButtonElement | null;
-  const closeButton = host.querySelector('.rb-close') as HTMLButtonElement | null;
-  const backdrop = host.querySelector('.rb-backdrop') as HTMLDivElement | null;
-  const statusElement = host.querySelector('.rb-status') as HTMLDivElement | null;
+  const titleElement = shadowRoot.querySelector('.rb-title');
+  const urlElement = shadowRoot.querySelector('.rb-url');
+  const categorySelect = shadowRoot.querySelector('#rb-category-select') as HTMLSelectElement | null;
+  const newCategoryInput = shadowRoot.querySelector('#rb-new-category') as HTMLInputElement | null;
+  const tagsInput = shadowRoot.querySelector('#rb-tags') as HTMLInputElement | null;
+  const noteInput = shadowRoot.querySelector('#rb-note') as HTMLTextAreaElement | null;
+  const saveButton = shadowRoot.querySelector('.rb-save') as HTMLButtonElement | null;
+  const openButton = shadowRoot.querySelector('.rb-open') as HTMLButtonElement | null;
+  const closeButton = shadowRoot.querySelector('.rb-close') as HTMLButtonElement | null;
+  const backdrop = shadowRoot.querySelector('.rb-backdrop') as HTMLDivElement | null;
+  const panel = shadowRoot.querySelector('.rb-panel') as HTMLDivElement | null;
+  const statusElement = shadowRoot.querySelector('.rb-status') as HTMLDivElement | null;
 
   if (
     !titleElement ||
@@ -431,6 +444,7 @@ async function showOverlay(pendingTweet: PendingTweet): Promise<void> {
     !openButton ||
     !closeButton ||
     !backdrop ||
+    !panel ||
     !statusElement
   ) {
     closeOverlay();
@@ -440,15 +454,16 @@ async function showOverlay(pendingTweet: PendingTweet): Promise<void> {
   titleElement.textContent = pendingTweet.authorName ?? pendingTweet.authorHandle ?? 'Save this post';
   urlElement.textContent = pendingTweet.url;
 
-  const categories = await listCategories();
-  for (const category of categories) {
-    const option = document.createElement('option');
-    option.value = category.id;
-    option.textContent = category.name;
-    categorySelect.appendChild(option);
-  }
+  panel.addEventListener('click', (event) => {
+    event.stopPropagation();
+  });
+  panel.addEventListener('pointerdown', (event) => {
+    event.stopPropagation();
+  });
 
-  closeButton.addEventListener('click', closeOverlay);
+  closeButton.addEventListener('click', () => {
+    closeOverlay();
+  });
   backdrop.addEventListener('click', (event) => {
     if (event.target === backdrop) {
       closeOverlay();
@@ -492,6 +507,18 @@ async function showOverlay(pendingTweet: PendingTweet): Promise<void> {
       saveButton.disabled = false;
     }
   });
+
+  try {
+    const categories = await listCategories();
+    for (const category of categories) {
+      const option = document.createElement('option');
+      option.value = category.id;
+      option.textContent = category.name;
+      categorySelect.appendChild(option);
+    }
+  } catch {
+    // Keep the form usable with the default Unsorted option.
+  }
 }
 
 function handleClick(event: MouseEvent): void {
